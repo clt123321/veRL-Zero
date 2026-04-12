@@ -1,155 +1,154 @@
 # veRL-Zero
 
-From-scratch GRPO reinforcement learning reasoning pipeline built on [veRL](https://github.com/volcengine/verl) with micro LLMs (0.5B).
+从零开始构建的、基于 [veRL](https://github.com/volcengine/verl) 和微型大模型（0.5B）的纯血 GRPO 强化学习推理流水线。
 
-## Overview
+## 项目简介
 
-veRL-Zero is a minimal, reproducible project that trains small language models to develop mathematical reasoning capabilities using GRPO (Generalized Relative Policy Optimization). It demonstrates that even a 0.5B parameter model can begin learning structured reasoning through RL — starting from zero reasoning ability.
+veRL-Zero 是一个极简、可复现的项目，使用 GRPO（广义相对策略优化）训练小型语言模型发展数学推理能力。它证明了即使是 0.5B 参数的模型，也能通过强化学习开始学习结构化推理——从零起步。
 
-The pipeline is designed to run on a **single RTX 4090 (24GB)**, making it accessible for individual researchers and students.
+整个流水线设计为在 **单张 RTX 4090 (24GB)** 上运行，对个人研究者和学生友好。
 
-## Architecture
+## 项目结构
 
 ```
 veRL-Zero/
 ├── scripts/
-│   ├── prepare_gsm8k.py     # GSM8K dataset preprocessing
-│   ├── run_grpo.sh          # Training launch script
-│   └── run_grpo_train.py    # GRPO training entry point
+│   ├── prepare_gsm8k.py     # GSM8K 数据集预处理
+│   ├── run_grpo.sh          # 训练启动脚本
+│   └── run_grpo_train.py    # GRPO 训练入口
 ├── src/
 │   ├── __init__.py
-│   └── reward_function.py   # Custom reward function (format + correctness)
+│   └── reward_function.py   # 自定义奖励函数（格式 + 正确性）
 ├── logs/
-│   └── mvp_10_steps_analysis.md  # Training analysis report
+│   └── mvp_10_steps_analysis.md  # 训练分析报告
 ├── .gitignore
 └── README.md
 ```
 
-## Environment & Dependencies
+## 环境与依赖
 
-| Component | Version |
-|-----------|---------|
+| 组件 | 版本 |
+|------|------|
 | CUDA | 12.4 |
 | PyTorch | 2.6 |
 | vLLM | 0.8+ |
 | veRL | verl-agent (fork) |
 | Transformers | 4.x |
 | Datasets | HuggingFace datasets |
-| DeepSpeed | FSDP backend |
+| DeepSpeed | FSDP 后端 |
 
-### Minimum Hardware
+### 最低硬件要求
 
-| Resource | Requirement |
-|----------|-------------|
-| GPU | 1x RTX 4090 (24GB VRAM) |
-| Peak VRAM | ~20GB |
-| Disk | ~20GB (model + data + checkpoints) |
+| 资源 | 要求 |
+|------|------|
+| GPU | 1x RTX 4090 (24GB 显存) |
+| 峰值显存 | ~20GB |
+| 磁盘 | ~20GB（模型 + 数据 + 检查点） |
 
-## Quick Start
+## 快速开始
 
-### 1. Environment Setup
+### 1. 环境搭建
 
 ```bash
-# Clone the repository
+# 克隆仓库
 git clone https://github.com/clt123321/veRL-Zero.git
 cd veRL-Zero
 
-# Install veRL (on your training server)
+# 安装 veRL（在训练服务器上）
 pip install verl
 pip install vllm
 ```
 
-### 2. Download Model
+### 2. 下载模型
 
 ```bash
-# Download Qwen2.5-0.5B-Instruct
+# 下载 Qwen2.5-0.5B-Instruct
 huggingface-cli download Qwen/Qwen2.5-0.5B-Instruct --local-dir ./Qwen2.5-0.5B-Instruct
 ```
 
-### 3. Prepare Data
+### 3. 准备数据
 
 ```bash
 python scripts/prepare_gsm8k.py
-# Output: ./data/gsm8k/train.parquet, ./data/gsm8k/test.parquet
+# 输出: ./data/gsm8k/train.parquet, ./data/gsm8k/test.parquet
 ```
 
-### 4. Run Training
+### 4. 启动训练
 
 ```bash
 bash scripts/run_grpo.sh
 ```
 
-## Reward Function
+## 奖励函数
 
-The reward function (`src/reward_function.py`) enforces a structured output format:
+奖励函数（`src/reward_function.py`）强制模型输出结构化格式：
 
-| Condition | Reward |
-|-----------|--------|
-| No `<thinking>` or `<answer>` tags | -1.0 |
-| Has tags but wrong answer | 0.0 |
-| Has tags and correct answer | 1.0 |
+| 条件 | 奖励值 |
+|------|--------|
+| 无 `<thinking>` 或 `<answer>` 标签 | -1.0 |
+| 有标签但答案错误 | 0.0 |
+| 有标签且答案正确 | 1.0 |
 
-This sparse reward design encourages the model to first learn output formatting before developing reasoning skills.
+这种稀疏奖励设计促使模型先学会输出格式，再逐步发展推理能力。
 
-## Experimental Results (MVP - 10 Steps)
+## 实验结果（MVP - 10 步）
 
-### Training Metrics
+### 训练指标
 
-| Step | Score/Mean | PG Loss |
+| 步数 | Score/Mean | PG Loss |
 |------|-----------|---------|
 | 1 | -0.913 | -0.035 |
 | 5 | -0.900 | 0.003 |
 | 8 | -0.738 | 0.041 |
 | 10 | **-0.775** | -0.030 |
 
-**Key observation**: Score improved from -0.913 to -0.775, indicating the model learned to produce structured `<thinking>`/`<answer>` output format. Accuracy gains require more training steps (100+).
+**核心发现**：Score 从 -0.913 提升至 -0.775，说明模型学会了产生结构化的 `<thinking>`/`<answer>` 输出格式。准确率提升需要更多训练步数（100+）。
 
-### Inference Comparison
+### 推理对比
 
-| Metric | Original | Trained (10 steps) |
-|--------|----------|-------------------|
-| Accuracy (8 questions) | 25.0% | 25.0% |
-| Format compliance | Low | Improving |
+| 指标 | 原始模型 | 训练后（10 步） |
+|------|---------|---------------|
+| 准确率（8 题） | 25.0% | 25.0% |
+| 格式合规性 | 低 | 逐步改善 |
 
-Detailed analysis: [logs/mvp_10_steps_analysis.md](logs/mvp_10_steps_analysis.md)
+详细分析：[logs/mvp_10_steps_analysis.md](logs/mvp_10_steps_analysis.md)
 
-## Roadmap
+## 路线图
 
-- [ ] **Scale training**: Run 100-500 steps for meaningful accuracy gains
-- [ ] **WandB integration**: Real-time metric tracking and visualization
-- [ ] **Softer reward shaping**: Partial credit for numerically close answers
-- [ ] **Larger models**: Experiment with Qwen2.5-1.5B and 7B
-- [ ] **Full GSM8K evaluation**: Test on complete 1,319-question test set
-- [ ] **Multi-GPU support**: Scale to multi-GPU training with FSDP
-- [ ] **Curriculum learning**: Progressive difficulty training strategy
+- [ ] **扩大训练规模**：运行 100-500 步以获得显著的准确率提升
+- [ ] **接入 WandB**：实时指标追踪与可视化
+- [ ] **更柔和的奖励塑形**：对数值接近的答案给予部分奖励
+- [ ] **更大模型**：尝试 Qwen2.5-1.5B 和 7B
+- [ ] **完整 GSM8K 评测**：在全部 1,319 题测试集上评估
+- [ ] **多 GPU 支持**：使用 FSDP 扩展到多卡训练
+- [ ] **课程学习**：渐进式难度训练策略
 
-## How It Works
+## 工作原理
 
 ```
 ┌─────────────┐     ┌──────────────┐     ┌──────────────┐
-│  GSM8K Data │ ──▶ │  GRPO Train  │ ──▶ │  Checkpoint  │
-│  (7473 q's) │     │  (veRL+vLLM) │     │  (FSDP→HF)   │
+│  GSM8K 数据 │ ──▶ │  GRPO 训练   │ ──▶ │   检查点     │
+│  (7473 题)  │     │  (veRL+vLLM) │     │  (FSDP→HF)   │
 └─────────────┘     └──────────────┘     └──────────────┘
                            │
                     ┌──────┴──────┐
-                    │   Reward    │
-                    │  Function   │
-                    │ (format +   │
-                    │ correctness)│
+                    │   奖励函数   │
+                    │ (格式 +      │
+                    │  正确性)     │
                     └─────────────┘
 ```
 
-1. **Data Prep**: GSM8K questions are formatted with a system prompt requesting `<thinking>`/`<answer>` structured output
-2. **GRPO Training**: The model generates N=5 responses per prompt; GRPO computes relative advantages to update the policy
-3. **Reward Signal**: Custom reward function checks format compliance and answer correctness
-4. **Checkpoint**: FSDP checkpoints are saved and can be converted to HuggingFace format for inference
+1. **数据准备**：GSM8K 题目被格式化为包含系统提示的结构化输入，要求模型使用 `<thinking>`/`<answer>` 标签输出
+2. **GRPO 训练**：模型对每个提示生成 N=5 个回复，GRPO 计算相对优势来更新策略
+3. **奖励信号**：自定义奖励函数检查格式合规性和答案正确性
+4. **检查点保存**：FSDP 检查点保存后可转换为 HuggingFace 格式用于推理
 
-## License
+## 许可证
 
 MIT
 
-## Acknowledgments
+## 致谢
 
-- [veRL](https://github.com/volcengine/verl) - Volcano Engine RL framework
-- [Qwen](https://qwen.readthedocs.io/) - Qwen2.5 model family
-- [GSM8K](https://huggingface.co/datasets/openai/gsm8k) - Grade School Math dataset
+- [veRL](https://github.com/volcengine/verl) - 火山引擎 RL 框架
+- [Qwen](https://qwen.readthedocs.io/) - Qwen2.5 模型家族
+- [GSM8K](https://huggingface.co/datasets/openai/gsm8k) - 小学数学数据集
