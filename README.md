@@ -111,7 +111,9 @@ bash scripts/run_grpo.sh
 | 准确率（8 题） | 25.0% | 25.0% |
 | 格式合规性 | 低 | 逐步改善 |
 
-详细分析：[logs/mvp_10_steps_analysis.md](logs/mvp_10_steps_analysis.md)
+详细分析：[logs/project_1_10_steps_analysis.md](logs/project_1_10_steps_analysis.md)
+
+完整实验报告：[EXPERIMENTS.md](EXPERIMENTS.md)
 
 ## 路线图
 
