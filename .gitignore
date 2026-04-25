@@ -40,37 +40,15 @@ env/
 .DS_Store
 Thumbs.db
 
-# Logs (keep analysis, ignore raw logs)
-*.log
-env_check_result.txt
+# HF cache
+.cache/
+huggingface/
 
-# Temp files from SSH operations
-ssh_cmd.py
-ssh_stdin.py
-deploy_and_run.py
-apply_*.py
-patch_*.py
-fix_*.py
-restart_*.py
-retrain_with_save.py
-start_training*.py
-start_inference.py
-skip_val_and_restart.py
-run_inference_compare.py
-upload_*.py
-run_verify*.py
-verify_data*.py
-check_data.py
-check_env*.py
-check_env.sh
-training_log.txt
+# dev/ 目录：调试过程归档脚本，保留在本地不推送 GitHub
+dev/
 
-# Root-level duplicates (moved to scripts/ and src/)
+# 根目录重复文件（已移动到 scripts/src，备份在此）
 /prepare_gsm8k.py
 /reward_function.py
 /run_grpo.sh
 /run_grpo_train.py
-
-# HF cache
-.cache/
-huggingface/
